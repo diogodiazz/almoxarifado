@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Produtos - Almoxarifado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 30px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .menu-container {
+      background-color: #f4f4f4;
+      padding: 10px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      position: relative;
+    }
+
+    .menu-container a {
+      color: black;
+      text-decoration: none;
+      margin: 0 15px;
+    }
+
+    .menu-container a:hover {
+      background-color: #a0c542;
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    .logo-container {
+      position: absolute;
+      right: 20px;
+    }
+
+    .logo-container img {
+      height: 80px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .form-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    .form-container div {
+      margin: 0 10px;
+    }
+
+    .form-container input, .form-container button {
+      width: 150px;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #a0c542;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #26844b;
+    }
+
+    .search-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .search-container input {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .edit-button, .delete-button {
+      padding: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .edit-button {
+      background-color: #a0c542;
+    }
+
+    .delete-button {
+      background-color: #c82333;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="menu-container">
+    <a href="cadastro.html">Cadastro</a>
+    <a href="entrada_saida.html">Entrada e Saída</a>
+    <a href="controle_estoque.html">Controle de Estoque</a>
+    <div class="logo-container">
+      <img src="logo.png" alt="Logo">
+    </div>
+  </div>
+
+  <h1>Cadastro de Produto</h1>
+
+  <div class="search-container">
+    <input type="text" id="searchProduto" placeholder="Pesquisar produto..." oninput="pesquisarProduto()">
+  </div>
+
+  <form id="formCadastro" class="form-container">
+    <div>
+      <label for="produto">Produto:</label><br>
+      <input type="text" id="produto" required>
+    </div>
+    <div>
+      <label for="quantidade">Quantidade Inicial:</label><br>
+      <input type="number" id="quantidade" min="0" required>
+    </div>
+    <div>
+      <label for="local">Local:</label><br>
+      <input type="text" id="local" required>
+    </div>
+    <div>
+      <button type="submit">Cadastrar</button>
+    </div>
+  </form>
+
+  <h2>Produtos Cadastrados</h2>
+  <table id="tabelaCadastro">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Quantidade Atual</th>
+        <th>Local</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const formCadastro = document.getElementById("formCadastro");
+    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+    formCadastro.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const nome = document.getElementById("produto").value.trim();
+      const quantidade = parseInt(document.getElementById("quantidade").value);
+      const local = document.getElementById("local").value.trim();
+
+      if (!nome || isNaN(quantidade) || !local) return;
+
+      // Verifica se produto já existe
+      const existente = produtos.find(p => p.produto.toLowerCase() === nome.toLowerCase());
+      if (existente) {
+        alert("Produto já cadastrado!");
+        return;
+      }
+
+      const novoProduto = {
+        produto: nome,
+        quantidade: quantidade,
+        local: local,
+        historico: []
+      };
+
+      produtos.push(novoProduto);
+      localStorage.setItem("produtos", JSON.stringify(produtos));
+
+      formCadastro.reset();
+      renderizarTabela();
+    });
+
+    function renderizarTabela() {
+      const tabela = document.getElementById("tabelaCadastro").getElementsByTagName("tbody")[0];
+      tabela.innerHTML = "";
+      produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+      produtos.forEach((item, index) => {
+        const linha = tabela.insertRow();
+        linha.insertCell(0).innerText = item.produto;
+        linha.insertCell(1).innerText = item.quantidade;
+        linha.insertCell(2).innerText = item.local;
+
+        const acoes = document.createElement("div");
+        acoes.className = "action-buttons";
+
+        const edit = document.createElement("button");
+        edit.className = "edit-button";
+        edit.innerText = "Editar";
+        edit.onclick = () => editarProduto(index);
+
+        const del = document.createElement("button");
+        del.className = "delete-button";
+        del.innerText = "Excluir";
+        del.onclick = () => excluirProduto(index);
+
+        acoes.appendChild(edit);
+        acoes.appendChild(del);
+        linha.insertCell(3).appendChild(acoes);
+      });
+    }
+
+    function editarProduto(index) {
+      const produto = produtos[index];
+      document.getElementById("produto").value = produto.produto;
+      document.getElementById("quantidade").value = produto.quantidade;
+      document.getElementById("local").value = produto.local;
+
+      formCadastro.querySelector("button").innerText = "Atualizar";
+
+      formCadastro.onsubmit = function (e) {
+        e.preventDefault();
+        produto.produto = document.getElementById("produto").value.trim();
+        produto.quantidade = parseInt(document.getElementById("quantidade").value);
+        produto.local = document.getElementById("local").value.trim();
+
+        produtos[index] = produto;
+        localStorage.setItem("produtos", JSON.stringify(produtos));
+        formCadastro.reset();
+        formCadastro.querySelector("button").innerText = "Cadastrar";
+        formCadastro.onsubmit = null;
+        renderizarTabela();
+      };
+    }
+
+    function excluirProduto(index) {
+      if (confirm("Tem certeza que deseja excluir este produto?")) {
+        produtos.splice(index, 1);
+        localStorage.setItem("produtos", JSON.stringify(produtos));
+        renderizarTabela();
+      }
+    }
+
+    function pesquisarProduto() {
+      const termo = document.getElementById("searchProduto").value.toLowerCase();
+      const linhas = document.querySelectorAll("#tabelaCadastro tbody tr");
+      linhas.forEach(linha => {
+        const nome = linha.cells[0].innerText.toLowerCase();
+        linha.style.display = nome.includes(termo) ? "" : "none";
+      });
+    }
+
+    renderizarTabela();
+  </script>
+
+  <footer class="assinatura">
+    Desenvolvido por Diogo Dias • Fv Cereais • © 2025
+  </footer>
+
+</body>
+</html>

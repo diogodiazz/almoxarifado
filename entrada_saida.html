@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrada e Saída</title>
+  <style>
+    /* Estilos originais (não alterados para manter o layout) */
+    body {
+      font-family: Helvetica, sans-serif;
+      background-color: #f4f4f4;
+      padding: 30px;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .menu-container {
+      background-color: #f4f4f4;
+      padding: 10px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      position: relative;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .menu-container a {
+      color: black;
+      text-decoration: none;
+      margin: 0 20px;
+      font-size: 18px;
+    }
+
+    .menu-container a:hover {
+      background-color: #a0c542;
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    .logo-container {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .logo-container img {
+      height: 80px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f4f4f4;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .form-container {
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .form-container input {
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    .form-container button {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .form-container button:hover {
+      background-color: #45a049;
+    }
+
+    .produto-list {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      width: 200px;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .produto-list div {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .produto-list div:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cabeçalho com menu e logo ajustada -->
+  <div class="menu-container">
+    <a href="cadastro.html">Cadastro</a>
+    <a href="entrada_saida.html">Entrada e Saída</a>
+    <a href="controle_estoque.html">Controle de Estoque</a>
+    <div class="logo-container">
+      <img src="logo.png" alt="Logo">
+    </div>
+  </div>
+
+  <h1>Entrada e Saída</h1>
+
+  <!-- Formulário de registro de movimentação -->
+  <div class="form-container">
+    <label for="produto">Produto: </label>
+    <input type="text" id="produto" placeholder="Nome do produto" oninput="buscarProduto()">
+    <div id="produto-list" class="produto-list"></div>
+
+    <label for="quantidade">Quantidade: </label>
+    <input type="number" id="quantidade" placeholder="Quantidade" min="1">
+
+    <label for="tipo">Tipo: </label>
+    <select id="tipo">
+      <option value="Entrada">Entrada</option>
+      <option value="Saída">Saída</option>
+    </select>
+
+    <button id="registrar">Registrar Movimentação</button>
+  </div>
+
+  <table id="tabelaMovimentacao">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Quantidade</th>
+        <th>Tipo</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Dados aparecerão aqui -->
+    </tbody>
+  </table>
+
+  <script>
+    // Função para buscar produtos ao digitar no campo de produto
+    function buscarProduto() {
+      const nomeProduto = document.getElementById("produto").value.trim();
+      const listaProduto = document.getElementById("produto-list");
+      listaProduto.innerHTML = '';
+
+      if (nomeProduto.length > 0) {
+        let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+        const produtosFiltrados = produtos.filter(produto => produto.produto.toLowerCase().includes(nomeProduto.toLowerCase()));
+
+        produtosFiltrados.forEach(produto => {
+          const item = document.createElement('div');
+          item.textContent = produto.produto;
+          item.onclick = function() {
+            document.getElementById("produto").value = produto.produto;
+            listaProduto.style.display = 'none';
+          };
+          listaProduto.appendChild(item);
+        });
+
+        listaProduto.style.display = produtosFiltrados.length > 0 ? 'block' : 'none';
+      } else {
+        listaProduto.style.display = 'none';
+      }
+    }
+
+    document.getElementById("registrar").addEventListener("click", function () {
+      const nomeProduto = document.getElementById("produto").value.trim();
+      const quantidade = Number(document.getElementById("quantidade").value);
+      const tipo = document.getElementById("tipo").value;
+
+      // Validação de campos
+      if (!nomeProduto || !quantidade || quantidade <= 0) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return;
+      }
+
+      let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+      // Verificar se o produto está cadastrado
+      let produtoIndex = produtos.findIndex(p => p.produto.toLowerCase() === nomeProduto.toLowerCase());
+
+      if (produtoIndex === -1) {
+        alert("Produto não cadastrado. Cadastre-o primeiro na página de Cadastro.");
+        return;
+      }
+
+      // Atualiza o estoque do produto com base no tipo de movimentação
+      if (tipo === "Entrada") {
+        produtos[produtoIndex].quantidade += quantidade;
+      } else if (tipo === "Saída") {
+        produtos[produtoIndex].quantidade -= quantidade;
+        if (produtos[produtoIndex].quantidade < 0) produtos[produtoIndex].quantidade = 0;
+      }
+
+      // Atualiza o histórico de movimentações
+      if (!produtos[produtoIndex].historico) {
+        produtos[produtoIndex].historico = [];
+      }
+      produtos[produtoIndex].historico.push({
+        tipo,
+        quantidade,
+        data: new Date().toISOString()
+      });
+
+      // Salva os produtos atualizados
+      localStorage.setItem("produtos", JSON.stringify(produtos));
+
+      // Registra a movimentação em localStorage (geral)
+      const movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
+      movimentacoes.push({ produto: nomeProduto, quantidade, tipo });
+      localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+
+      // Limpar os campos após registro
+      document.getElementById("produto").value = "";
+      document.getElementById("quantidade").value = "";
+      document.getElementById("tipo").value = "Entrada";
+
+      renderTabela();
+    });
+
+    // Função para renderizar a tabela de movimentações
+    function renderTabela() {
+      const tabela = document.getElementById("tabelaMovimentacao").getElementsByTagName("tbody")[0];
+      tabela.innerHTML = "";
+
+      const movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
+
+      movimentacoes.forEach((movimentacao, index) => {
+        const linha = tabela.insertRow();
+        linha.insertCell(0).innerText = movimentacao.produto;
+        linha.insertCell(1).innerText = movimentacao.quantidade;
+        linha.insertCell(2).innerText = movimentacao.tipo;
+        linha.insertCell(3).innerHTML = `<button onclick="excluirMovimentacao(${index})">Excluir</button>`;
+      });
+    }
+
+    // Função para excluir movimentação
+    function excluirMovimentacao(index) {
+      const movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
+      movimentacoes.splice(index, 1);
+      localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+      renderTabela();
+    }
+
+    // Carregar os registros na inicialização da página
+    renderTabela();
+  </script>
+
+  <!-- Rodapé -->
+  <footer class="assinatura">
+    Desenvolvido por Diogo Dias • Fv Cereais • © 2025
+  </footer>
+
+</body>
+</html>

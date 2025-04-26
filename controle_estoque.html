@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Controle de Estoque</title>
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+      background-color: #f4f4f4;
+      padding: 30px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .menu-container {
+      background-color: #f4f4f4;
+      padding: 10px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      position: relative;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .menu-container a {
+      color: black;
+      text-decoration: none;
+      margin: 0 20px;
+      font-size: 18px;
+    }
+
+    .menu-container a:hover {
+      background-color: #a0c542;
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    .logo-container {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .logo-container img {
+      height: 80px;
+      width: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .estoque-ok {
+      background-color: #c8e6c9;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .necessita-compra {
+      background-color: #ffcdd2;
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    .estoque-atual {
+      background-color: #26844b;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="menu-container">
+    <a href="cadastro.html">Cadastro</a>
+    <a href="entrada_saida.html">Entrada e Saída</a>
+    <a href="controle_estoque.html">Controle de Estoque</a>
+    <div class="logo-container">
+      <img src="logo.png" alt="Logo" />
+    </div>
+  </div>
+
+  <h1>Controle de Estoque</h1>
+
+  <table id="tabelaStatus">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Estoque Inicial</th>
+        <th class="estoque-atual">Estoque Atual</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function renderTabela() {
+      const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+      const tabela = document.querySelector("#tabelaStatus tbody");
+      tabela.innerHTML = "";
+
+      produtos.forEach(produto => {
+        const nome = produto.produto;
+        const estoqueAtual = Number(produto.quantidade) || 0;
+
+        let estoqueInicial = estoqueAtual;
+
+        // Recalcular estoque inicial com base no histórico
+        if (produto.historico && Array.isArray(produto.historico)) {
+          produto.historico.forEach(mov => {
+            if (mov.tipo === "Entrada") estoqueInicial -= mov.quantidade;
+            else if (mov.tipo === "Saída") estoqueInicial += mov.quantidade;
+          });
+        }
+
+        const status = estoqueAtual > 3 ? "Estoque ok" : "Necessita Compra";
+        const classe = estoqueAtual > 3 ? "estoque-ok" : "necessita-compra";
+
+        const row = tabela.insertRow();
+        row.insertCell(0).innerText = nome;
+        row.insertCell(1).innerText = estoqueInicial < 0 ? 0 : estoqueInicial;
+        row.insertCell(2).innerText = estoqueAtual;
+        const cellStatus = row.insertCell(3);
+        cellStatus.innerText = status;
+        cellStatus.className = classe;
+      });
+    }
+
+    renderTabela();
+  </script>
+
+  <footer class="assinatura">
+    Desenvolvido por Diogo Dias • Fv Cereais • © 2025
+  </footer>
+
+</body>
+</html>
